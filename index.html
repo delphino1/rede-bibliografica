@@ -113,8 +113,8 @@ h1 em { display: block; font-style: normal; font-size: 11px; font-weight: 400; c
 }
 #reset-btn:hover { background: rgba(255,255,255,0.08); color: var(--text-secondary); }
 #reset-btn.visible { display: block; }
-/* Hide hover rendering layer but NOT the mouse event layer */
-#sigma-container canvas[data-layer="hovers"] { visibility: hidden !important; }
+/* Hide Sigma's hover overlay — it sits above the graph and blocks mouse events */
+.sigma-hovers { display: none !important; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 .fade-in { animation: fadeIn 0.9s ease forwards; }
 </style>
@@ -451,12 +451,15 @@ function launch(xml) {
         }
       });
 
-      // Hide ONLY the hover rendering canvas — never the mouse event canvas
-      // The mouse event canvas must remain visible for interactions to work
+      // Hide Sigma's hover canvas (causes white label bar on hover)
+      // Target by class name — works reliably in Sigma 2.x regardless of data-layer attributes
+      const hoverCanvas = document.querySelector('.sigma-hovers canvas') ||
+                          document.querySelector('canvas[class*="hover"]');
+      if (hoverCanvas) hoverCanvas.style.display = 'none';
       setTimeout(() => {
         document.querySelectorAll('#sigma-container canvas').forEach(c => {
-          if (c.getAttribute('data-layer') === 'hovers') {
-            c.style.visibility = 'hidden'; // visibility:hidden keeps layout + doesn't block events
+          if (c.className && c.className.includes && c.className.includes('hover')) {
+            c.style.display = 'none';
           }
         });
       }, 300);
