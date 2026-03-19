@@ -181,6 +181,7 @@ const clusterNames = {
 
 // Module-level state
 let renderer = null, currentGraph = null, hoveredNode = null, highlightedCluster = null;
+let hoveredNeighbors = new Set(); // pre-computed neighbor set for O(1) lookup in reducer
 let colorMap = {}, rgbMap = {};
 
 // Star field
@@ -416,9 +417,9 @@ function launch(xml) {
               res.size = data.size * 0.35;
             }
           } else if (hoveredNode) {
-            if (node === hoveredNode || graph.neighbors(hoveredNode).includes(node)) {
+            if (node === hoveredNode || hoveredNeighbors.has(node)) {
               res.zIndex = 1;
-              res.label = data.label; // always show label for hovered + neighbors
+              res.label = data.label;
               if (node === hoveredNode) res.size = data.size * 1.15;
             } else {
               res.color = 'rgba(255,255,255,0.08)';
@@ -443,7 +444,7 @@ function launch(xml) {
           } else if (hoveredNode) {
             const [s, t] = graph.extremities(edge);
             if (s === hoveredNode || t === hoveredNode) {
-              res.color = '#7777cc'; res.size = 1.5;
+              res.color = '#7777cc'; res.size = 1.4;
             } else {
               res.color = '#111118'; res.size = 0.2;
             }
@@ -479,11 +480,13 @@ function launch(xml) {
 
       renderer.on('enterNode', ({ node }) => {
         hoveredNode = node;
+        hoveredNeighbors = new Set(graph.neighbors(node)); // compute once, reuse in reducer
         renderer.refresh();
         document.body.style.cursor = 'pointer';
       });
       renderer.on('leaveNode', () => {
         hoveredNode = null;
+        hoveredNeighbors = new Set();
         renderer.refresh();
         document.body.style.cursor = 'crosshair';
       });
