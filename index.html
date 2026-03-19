@@ -303,31 +303,23 @@ function launch(xml) {
           return res;
         },
         edgeReducer(edge,data){
-          const res={...data};
+          // Always start with dark color — never use data.color (GEXF exports white)
+          const res = { ...data, color: '#252535', size: 0.5 };
           if(highlightedCluster!==null){
             const [s,t]=graph.extremities(edge);
             const sc=String(graph.getNodeAttribute(s,'modClass')),tc=String(graph.getNodeAttribute(t,'modClass'));
             if(sc===String(highlightedCluster)&&tc===String(highlightedCluster)){
-              // Use cluster color for edges
-              const sAttrs=graph.getNodeAttributes(s);
-              const r=sAttrs._r||128,g=sAttrs._g||128,b=sAttrs._b||128;
-              res.color=`rgba(${r},${g},${b},0.35)`;
-              res.size=1.4;
-            } else {res.color='rgba(255,255,255,0.012)';res.size=0.2;}
+              res.color='#5555aa'; res.size=1.2;
+            } else {
+              res.color='#111118'; res.size=0.2;
+            }
           } else if(hoveredNode){
             const [s,t]=graph.extremities(edge);
             if(s===hoveredNode||t===hoveredNode){
-              const hAttrs=graph.getNodeAttributes(hoveredNode);
-              const r=hAttrs._r||128,g=hAttrs._g||128,b=hAttrs._b||128;
-              res.color=`rgba(${r},${g},${b},0.5)`;
-              res.size=1.8;
-            } else {res.color='rgba(255,255,255,0.012)';res.size=0.2;}
-          }
-                    // Default state — very subtle edges
-          if(!highlightedCluster && !hoveredNode) {
-            res.size = 0.4;
-            res.color = '#1e1e2e';
-            res.size = 0.4;
+              res.color='#7777cc'; res.size=1.5;
+            } else {
+              res.color='#111118'; res.size=0.2;
+            }
           }
           return res;
         }
