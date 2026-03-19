@@ -6,9 +6,9 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f0f1a; color: #ddd; display: flex; height: 100vh; overflow: hidden; }
-
+ 
 #sigma-container { flex: 1; position: relative; background: #0f0f1a; }
-
+ 
 #panel {
   width: 300px;
   background: #13131f;
@@ -20,10 +20,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; b
   overflow-y: auto;
   flex-shrink: 0;
 }
-
+ 
 h1 { font-size: 13px; font-weight: 400; color: #666; line-height: 1.5; }
 h1 span { display: block; font-size: 15px; color: #c8cfe8; font-weight: 600; margin-bottom: 2px; }
-
+ 
 #load-area {
   background: #1c1c2e;
   border: 1.5px dashed #3a3a5c;
@@ -37,7 +37,7 @@ h1 span { display: block; font-size: 15px; color: #c8cfe8; font-weight: 600; mar
 #load-area p { font-size: 12px; color: #888; line-height: 1.6; }
 #load-area strong { color: #aaa; font-size: 13px; display: block; margin-bottom: 6px; }
 #file-input { display: none; }
-
+ 
 #load-btn {
   width: 100%;
   padding: 9px;
@@ -52,7 +52,7 @@ h1 span { display: block; font-size: 15px; color: #c8cfe8; font-weight: 600; mar
   transition: background 0.2s;
 }
 #load-btn:hover { background: #5a52d5; }
-
+ 
 #search {
   width: 100%;
   padding: 9px 12px;
@@ -67,7 +67,7 @@ h1 span { display: block; font-size: 15px; color: #c8cfe8; font-weight: 600; mar
 }
 #search:focus { border-color: #6c63ff; }
 #search.visible { display: block; }
-
+ 
 #node-info {
   background: #1c1c2e;
   border-radius: 10px;
@@ -81,17 +81,17 @@ h1 span { display: block; font-size: 15px; color: #c8cfe8; font-weight: 600; mar
 #node-info h2 { font-size: 14px; font-weight: 600; color: #c8cfe8; margin-bottom: 6px; line-height: 1.4; }
 #node-info .meta { font-size: 12px; color: #555; margin-top: 8px; }
 #node-info .meta span { color: #888; }
-
+ 
 #legend { display: none; flex-direction: column; gap: 7px; }
 #legend.visible { display: flex; }
 .legend-title { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.08em; }
 .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #999; cursor: pointer; padding: 3px 0; }
 .legend-item:hover { color: #ddd; }
 .legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-
+ 
 #stats { font-size: 11px; color: #444; display: none; }
 #stats.visible { display: block; }
-
+ 
 #hint {
   position: absolute;
   bottom: 16px;
@@ -105,7 +105,7 @@ h1 span { display: block; font-size: 15px; color: #c8cfe8; font-weight: 600; mar
   display: none;
 }
 #hint.visible { display: block; }
-
+ 
 #loading-msg {
   position: absolute;
   top: 50%;
@@ -116,7 +116,7 @@ h1 span { display: block; font-size: 15px; color: #c8cfe8; font-weight: 600; mar
   display: none;
 }
 #loading-msg.visible { display: block; }
-
+ 
 .tag {
   display: inline-block;
   font-size: 11px;
@@ -128,15 +128,15 @@ h1 span { display: block; font-size: 15px; color: #c8cfe8; font-weight: 600; mar
 </style>
 </head>
 <body>
-
+ 
 <div id="sigma-container">
   <div id="loading-msg">Carregando rede...</div>
   <div id="hint">Scroll para zoom · Arraste para navegar · Clique em um nó</div>
 </div>
-
+ 
 <div id="panel">
   <h1><span>Rede Bibliográfica</span>Visualizador interativo</h1>
-
+ 
   <div id="load-area" onclick="document.getElementById('file-input').click()">
     <strong>Carregar arquivo GEXF</strong>
     <p>Clique aqui ou arraste o arquivo exportado do Gephi</p>
@@ -145,19 +145,19 @@ h1 span { display: block; font-size: 15px; color: #c8cfe8; font-weight: 600; mar
       Selecionar arquivo
     </button>
   </div>
-
+ 
   <input type="text" id="search" class="" placeholder="🔍  Buscar autor..." />
-
+ 
   <div id="node-info"></div>
-
+ 
   <div id="legend">
     <p class="legend-title">Clusters (modularidade)</p>
     <div id="legend-items"></div>
   </div>
-
+ 
   <div id="stats"></div>
 </div>
-
+ 
 <script src="https://cdn.jsdelivr.net/npm/graphology@0.25.4/dist/graphology.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sigma@2.4.0/build/sigma.min.js"></script>
 <script>
@@ -166,14 +166,14 @@ function parseGEXF(xmlString) {
   const parser = new DOMParser();
   const doc = parser.parseFromString(xmlString, 'application/xml');
   const graph = new graphology.Graph({ multi: false });
-
+ 
   // Parse nodes
   const nodeElements = doc.querySelectorAll('node');
   nodeElements.forEach(nodeEl => {
     const id = nodeEl.getAttribute('id');
     const label = nodeEl.getAttribute('label') || id;
     const attrs = { label };
-
+ 
     // Parse viz attributes (Gephi visual export)
     const vizColor = nodeEl.querySelector('color');
     if (vizColor) {
@@ -184,7 +184,7 @@ function parseGEXF(xmlString) {
     }
     const vizSize = nodeEl.querySelector('size');
     if (vizSize) attrs.size = parseFloat(vizSize.getAttribute('value')) || 5;
-
+ 
     const vizPos = nodeEl.querySelector('position');
     if (vizPos) {
       attrs.x = parseFloat(vizPos.getAttribute('x')) || Math.random() * 100;
@@ -193,17 +193,17 @@ function parseGEXF(xmlString) {
       attrs.x = Math.random() * 100;
       attrs.y = Math.random() * 100;
     }
-
+ 
     // Parse data attributes
     nodeEl.querySelectorAll('attvalue').forEach(av => {
       const forAttr = av.getAttribute('for') || av.getAttribute('id');
       const val = av.getAttribute('value');
       if (forAttr) attrs[forAttr] = val;
     });
-
+ 
     try { graph.addNode(id, attrs); } catch(e) {}
   });
-
+ 
   // Parse edges
   const edgeElements = doc.querySelectorAll('edge');
   edgeElements.forEach(edgeEl => {
@@ -217,13 +217,13 @@ function parseGEXF(xmlString) {
       }
     } catch(e) {}
   });
-
+ 
   // Parse attribute definitions for modularity
   const attrDefs = {};
   doc.querySelectorAll('attributes[class="node"] attribute').forEach(attr => {
     attrDefs[attr.getAttribute('id')] = attr.getAttribute('title');
   });
-
+ 
   // Map attribute IDs to names
   graph.forEachNode((node, attrs) => {
     Object.entries(attrDefs).forEach(([id, title]) => {
@@ -235,7 +235,7 @@ function parseGEXF(xmlString) {
       }
     });
   });
-
+ 
   return graph;
 }
 </script>
@@ -244,16 +244,15 @@ let renderer = null;
 let currentGraph = null;
 let hoveredNode = null;
 let highlightedCluster = null;
-
+ 
 // Auto-load GEXF from same directory if running on a web server
 window.addEventListener('load', () => {
   const isLocal = location.protocol === 'file:';
   if (!isLocal) {
-    const gexfUrl = location.href.replace(/\/[^\/]*$/, '/') + 'rede_raca.gexf';
     document.getElementById('loading-msg').textContent = 'Carregando rede...';
     document.getElementById('loading-msg').classList.add('visible');
     document.getElementById('load-area').style.display = 'none';
-    fetch(gexfUrl)
+    fetch('./rede_raca.gexf')
       .then(r => {
         if (!r.ok) throw new Error('Arquivo não encontrado: ' + gexfUrl);
         return r.text();
@@ -266,11 +265,11 @@ window.addEventListener('load', () => {
       });
   }
 });
-
+ 
 // Drag and drop support
 const container = document.getElementById('sigma-container');
 const loadArea = document.getElementById('load-area');
-
+ 
 loadArea.addEventListener('dragover', e => { e.preventDefault(); loadArea.style.borderColor = '#6c63ff'; });
 loadArea.addEventListener('dragleave', () => { loadArea.style.borderColor = '#3a3a5c'; });
 loadArea.addEventListener('drop', e => {
@@ -279,11 +278,11 @@ loadArea.addEventListener('drop', e => {
   const file = e.dataTransfer.files[0];
   if (file) processFile(file);
 });
-
+ 
 document.getElementById('file-input').addEventListener('change', function() {
   if (this.files[0]) processFile(this.files[0]);
 });
-
+ 
 function processFile(file) {
   const reader = new FileReader();
   document.getElementById('loading-msg').classList.add('visible');
@@ -297,29 +296,29 @@ function processFile(file) {
   };
   reader.readAsText(file);
 }
-
+ 
 function loadGEXF(gexfString) {
   // Destroy previous renderer
   if (renderer) { renderer.kill(); renderer = null; }
-
+ 
   // Parse GEXF
   const graph = parseGEXF(gexfString);
   currentGraph = graph;
-
+ 
   // Filter edges by weight (keep only weight >= 7, matching Gephi filter)
   const weakEdges = [];
   graph.forEachEdge((edge, attrs) => {
     if ((attrs.weight || 1) < 7) weakEdges.push(edge);
   });
   weakEdges.forEach(e => graph.dropEdge(e));
-
+ 
   // Remove nodes with no connections after edge filter
   const toRemove = [];
   graph.forEachNode((node) => {
     if (graph.degree(node) === 0) toRemove.push(node);
   });
   toRemove.forEach(n => graph.dropNode(n));
-
+ 
   // Keep only giant component (BFS from highest-degree node)
   let maxDeg = 0, startNode = null;
   graph.forEachNode((node) => {
@@ -339,7 +338,7 @@ function loadGEXF(gexfString) {
     graph.forEachNode((node) => { if (!visited.has(node)) outsideComponent.push(node); });
     outsideComponent.forEach(n => graph.dropNode(n));
   }
-
+ 
   // Build color map from modularity classes that already have valid colors
   const classColorMap = {};
   graph.forEachNode((node, attrs) => {
@@ -350,7 +349,7 @@ function loadGEXF(gexfString) {
       }
     }
   });
-
+ 
   // Assign palette colors to classes that still lack a color
   const palette2 = ["#6c63ff","#2ec4a7","#e87d3e","#e84393","#5b9cf6","#f0c040","#a0d468","#8067dc","#ff6b6b","#4ecdc4"];
   let paletteIdx = 0;
@@ -367,7 +366,7 @@ function loadGEXF(gexfString) {
       }
     }
   });
-
+ 
   // Normalize node attributes from Gephi export
   // Gephi exports r,g,b as separate attributes or as color string
   const clusterColors = {};
@@ -377,7 +376,7 @@ function loadGEXF(gexfString) {
     '#f0c040','#a0d468','#8067dc','#ff6b6b','#4ecdc4',
     '#96c0ce','#ff9f43','#ee5a24','#0652dd','#9980fa'
   ];
-
+ 
   graph.forEachNode((node, attrs) => {
     // Gephi exports node color as r,g,b attributes
     let color = '#888888';
@@ -389,29 +388,29 @@ function loadGEXF(gexfString) {
       const b = Math.round(attrs.b);
       color = `rgb(${r},${g},${b})`;
     }
-
+ 
     // Get modularity class
     const modClass = attrs['modularity_class'] !== undefined
       ? String(attrs['modularity_class'])
       : (attrs['Modularity Class'] !== undefined ? String(attrs['Modularity Class']) : null);
-
+ 
     if (modClass !== null && !clusterColors[modClass]) {
       clusterColors[modClass] = color;
     }
-
+ 
     // Normalize size
     const size = attrs.size || attrs.Size || 5;
-
+ 
     graph.setNodeAttribute(node, 'color', color);
     graph.setNodeAttribute(node, '_gephi_size', parseFloat(size) || 5);
     graph.setNodeAttribute(node, 'modClass', modClass);
-
+ 
     // Ensure label
     if (!attrs.label) {
       graph.setNodeAttribute(node, 'label', node);
     }
   });
-
+ 
   // Scale node size by degree (applied after all nodes loaded)
   let maxDegree = 1;
   graph.forEachNode((node) => {
@@ -424,7 +423,7 @@ function loadGEXF(gexfString) {
     const scaled = 3 + (d / maxDegree) * 15;
     graph.setNodeAttribute(node, 'size', Math.round(scaled * 10) / 10);
   });
-
+ 
   // Nudge nodes slightly toward their cluster centroid for visual separation
   const centroids = {};
   const clusterCounts = {};
@@ -454,13 +453,13 @@ function loadGEXF(gexfString) {
     graph.setNodeAttribute(node, 'x', (attrs.x||0) + dx * push);
     graph.setNodeAttribute(node, 'y', (attrs.y||0) + dy * push);
   });
-
+ 
   // Normalize edges
   graph.forEachEdge((edge, attrs) => {
     graph.setEdgeAttribute(edge, 'color', '#2a2a3e');
     graph.setEdgeAttribute(edge, 'size', 0.5);
   });
-
+ 
   // Setup renderer
   renderer = new Sigma(graph, document.getElementById('sigma-container'), {
     renderEdgeLabels: false,
@@ -522,7 +521,7 @@ function loadGEXF(gexfString) {
       return res;
     }
   });
-
+ 
   renderer.on('enterNode', ({ node }) => {
     hoveredNode = node;
     renderer.refresh();
@@ -541,7 +540,7 @@ function loadGEXF(gexfString) {
     // Reset legend item styles
     document.querySelectorAll('.legend-item').forEach(el => el.style.opacity = '1');
   });
-
+ 
   // Update UI
   document.getElementById('loading-msg').classList.remove('visible');
   document.getElementById('load-area').style.display = 'none';
@@ -551,10 +550,10 @@ function loadGEXF(gexfString) {
   document.getElementById('hint').classList.add('visible');
   document.getElementById('stats').classList.add('visible');
   document.getElementById('stats').textContent = `${graph.order} autores · ${graph.size} conexões`;
-
+ 
   // Build legend
   buildLegend(clusterColors);
-
+ 
   // Search
   document.getElementById('search').addEventListener('input', function() {
     const q = this.value.toLowerCase().trim();
@@ -572,15 +571,15 @@ function loadGEXF(gexfString) {
     }
   });
 }
-
+ 
 function showNodeInfo(node) {
   const a = currentGraph.getNodeAttributes(node);
   const info = document.getElementById('node-info');
   info.classList.add('visible');
-
+ 
   const degree = currentGraph.degree(node);
   const color = a.color || '#888';
-
+ 
   info.innerHTML = `
     <h2>${a.label || node}</h2>
     <span class="tag" style="background:${color}22;color:${color};border:1px solid ${color}44">
@@ -591,7 +590,7 @@ function showNodeInfo(node) {
     </div>
   `;
 }
-
+ 
 function buildLegend(clusterColors) {
   const legendItems = document.getElementById('legend-items');
   legendItems.innerHTML = '';
@@ -606,10 +605,10 @@ function buildLegend(clusterColors) {
   });
   document.getElementById('legend').classList.add('visible');
 }
-
+ 
 function highlightCluster(cls) {
   if (!currentGraph || !renderer) return;
-
+ 
   // Toggle off if clicking same cluster
   if (String(highlightedCluster) === String(cls)) {
     highlightedCluster = null;
@@ -617,16 +616,16 @@ function highlightCluster(cls) {
     document.querySelectorAll('.legend-item').forEach(el => el.style.opacity = '1');
     return;
   }
-
+ 
   highlightedCluster = cls;
   hoveredNode = null;
   renderer.refresh();
-
+ 
   // Dim non-selected legend items
   document.querySelectorAll('.legend-item').forEach(el => {
     el.style.opacity = el.dataset.cls === String(cls) ? '1' : '0.3';
   });
-
+ 
   // Zoom to cluster centroid
   let cx = 0, cy = 0, count = 0;
   currentGraph.forEachNode((node, attrs) => {
