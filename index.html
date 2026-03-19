@@ -278,7 +278,7 @@ function launch(xml) {
 
         minCameraRatio:0.04,
         maxCameraRatio:12,
-        defaultEdgeColor:'rgba(255,255,255,0.06)',
+        defaultEdgeColor:'#1a1a2a',
         nodeReducer(node,data){
           const res={...data};
           if(highlightedCluster!==null){
@@ -326,7 +326,8 @@ function launch(xml) {
                     // Default state — very subtle edges
           if(!highlightedCluster && !hoveredNode) {
             res.size = 0.4;
-            res.color = 'rgba(255,255,255,0.04)';
+            res.color = '#1e1e2e';
+            res.size = 0.4;
           }
           return res;
         }
