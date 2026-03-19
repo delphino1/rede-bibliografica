@@ -266,21 +266,35 @@ function launch(xml) {
       if(renderer)renderer.kill();
  
       // Custom label renderer with dark halo for readability
-      function drawLabel(context, data, settings) {
+      // Shared label drawing — dark halo + white text, no background bar
+      function drawNodeLabel(context, data, settings) {
         if (!data.label) return;
-        const size = settings.labelSize;
-        const font = settings.labelFont;
-        const weight = settings.labelWeight;
-        context.font = `${weight} ${size}px ${font}`;
-        const x = data.x + data.size + 4;
-        const y = data.y + size / 3;
-        // Dark halo
-        context.lineWidth = 3;
-        context.strokeStyle = 'rgba(3,3,10,0.85)';
+        const size = settings.labelSize || 12;
+        context.font = `${settings.labelWeight||'500'} ${size}px ${settings.labelFont||'sans-serif'}`;
+        const x = data.x + data.size + 5;
+        const y = data.y + size * 0.35;
+        context.lineWidth = 3.5;
+        context.strokeStyle = 'rgba(3,3,10,0.9)';
         context.lineJoin = 'round';
+        context.miterLimit = 2;
         context.strokeText(data.label, x, y);
-        // Label text
-        context.fillStyle = 'rgba(255,255,255,0.9)';
+        context.fillStyle = 'rgba(255,255,255,0.92)';
+        context.fillText(data.label, x, y);
+      }
+ 
+      // Hover renderer — same as label but slightly larger, NO white box
+      function drawHoverLabel(context, data, settings) {
+        if (!data.label) return;
+        const size = (settings.labelSize || 12) + 1;
+        context.font = `600 ${size}px ${settings.labelFont||'sans-serif'}`;
+        const x = data.x + data.size + 5;
+        const y = data.y + size * 0.35;
+        context.lineWidth = 4;
+        context.strokeStyle = 'rgba(3,3,10,0.95)';
+        context.lineJoin = 'round';
+        context.miterLimit = 2;
+        context.strokeText(data.label, x, y);
+        context.fillStyle = '#ffffff';
         context.fillText(data.label, x, y);
       }
  
@@ -290,11 +304,12 @@ function launch(xml) {
         labelSize:12,
         labelWeight:'500',
         labelColor:{color:'rgba(255,255,255,0.9)'},
-        labelRenderedSizeThreshold:8,
-        labelRenderer: drawLabel,
+        labelRenderedSizeThreshold:10,
+        labelRenderer: drawNodeLabel,
+        hoverRenderer: drawHoverLabel,
         minCameraRatio:0.04,
         maxCameraRatio:12,
-        defaultEdgeColor:'rgba(255,255,255,0.055)',
+        defaultEdgeColor:'rgba(255,255,255,0.04)',
         nodeReducer(node,data){
           const res={...data};
           const r=data._r||128,g=data._g||128,b=data._b||128;
@@ -347,6 +362,11 @@ function launch(xml) {
               res.color=`rgba(${r},${g},${b},0.5)`;
               res.size=1.8;
             } else {res.color='rgba(255,255,255,0.012)';res.size=0.2;}
+          }
+                    // Default state — very subtle edges
+          if(!highlightedCluster && !hoveredNode) {
+            res.size = 0.4;
+            res.color = 'rgba(255,255,255,0.04)';
           }
           return res;
         }
