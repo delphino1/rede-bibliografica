@@ -263,6 +263,12 @@ function launch(xml) {
       let gcx=0,gcy=0,gc=0; graph.forEachNode((n,a)=>{gcx+=a.x||0;gcy+=a.y||0;gc++;});gcx/=gc;gcy/=gc;
       graph.forEachNode((n,a)=>{const cls=a.modClass||'0';const dx=cen[cls].x-gcx,dy=cen[cls].y-gcy;graph.setNodeAttribute(n,'x',(a.x||0)+dx*0.2);graph.setNodeAttribute(n,'y',(a.y||0)+dy*0.2);});
 
+      // Build top 50 nodes by degree
+      const degreeList = [];
+      graph.forEachNode((n) => degreeList.push([n, graph.degree(n)]));
+      degreeList.sort((a,b) => b[1]-a[1]);
+      const top50 = new Set(degreeList.slice(0,50).map(d=>d[0]));
+
       currentGraph=graph;
       if(renderer)renderer.kill();
 
@@ -275,15 +281,18 @@ function launch(xml) {
         labelSize:12,
         labelWeight:'500',
         labelColor:{color:'#ffffff'},
-        labelRenderedSizeThreshold:6,
-        labelDensity:1,
-        labelGridCellSize:200,
+        labelRenderedSizeThreshold:0,
+        labelDensity:0.5,
+        labelGridCellSize:150,
 
         minCameraRatio:0.04,
         maxCameraRatio:12,
         defaultEdgeColor:'#1a1a2a',
         nodeReducer(node,data){
           const res={...data};
+          if (!top50.has(node) && highlightedCluster === null && !hoveredNode) {
+            res.label = '';
+          }
           if(highlightedCluster!==null){
             const a=graph.getNodeAttributes(node);
             if(String(a.modClass)===String(highlightedCluster)){
