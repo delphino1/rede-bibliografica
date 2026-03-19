@@ -254,7 +254,7 @@ function launch(xml) {
 
       // Size by degree with power curve
       let maxD=1; graph.forEachNode(n=>{const d=graph.degree(n);if(d>maxD)maxD=d;});
-      graph.forEachNode(n=>{const t=graph.degree(n)/maxD;graph.setNodeAttribute(n,'size',2+Math.pow(t,0.55)*14);});
+      graph.forEachNode(n=>{const t=graph.degree(n)/maxD;graph.setNodeAttribute(n,'size',3+Math.pow(t,0.55)*18);});
 
       // Cluster separation
       const cen={},cnt={};
@@ -275,9 +275,9 @@ function launch(xml) {
         labelSize:12,
         labelWeight:'500',
         labelColor:{color:'#ffffff'},
-        labelRenderedSizeThreshold:4,
-        labelDensity:1.5,
-        labelGridCellSize:120,
+        labelRenderedSizeThreshold:6,
+        labelDensity:1,
+        labelGridCellSize:200,
 
         minCameraRatio:0.04,
         maxCameraRatio:12,
