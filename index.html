@@ -304,7 +304,7 @@ function launch(xml) {
         },
         edgeReducer(edge,data){
           // Always start with dark color — never use data.color (GEXF exports white)
-          const res = { ...data, color: '#252535', size: 0.5 };
+          const res = { ...data, color: '#3a3a55', size: 0.6 };
           if(highlightedCluster!==null){
             const [s,t]=graph.extremities(edge);
             const sc=String(graph.getNodeAttribute(s,'modClass')),tc=String(graph.getNodeAttribute(t,'modClass'));
