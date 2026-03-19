@@ -16,7 +16,7 @@
   --panel-w: 272px;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Space Grotesk', sans-serif; background: var(--bg); color: var(--text-primary); height: 100vh; overflow: hidden; display: flex; cursor: crosshair; }
+body { font-family: 'Space Grotesk', sans-serif; background: radial-gradient(ellipse at 58% 48%, #08081e 0%, #03030a 68%); color: var(--text-primary); height: 100vh; overflow: hidden; display: flex; cursor: crosshair; }
 #stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
 #sigma-container { flex: 1; position: relative; z-index: 1; }
 
@@ -129,6 +129,35 @@ h1 em { display: block; font-style: normal; font-size: 11px; font-weight: 400; c
   white-space: nowrap; transition: opacity 0.3s;
   padding: 3px 10px; border-radius: 20px; backdrop-filter: blur(6px);
 }
+
+/* ── Ripple animation ───────────────────────────────── */
+.ripple {
+  position: absolute; border-radius: 50%; pointer-events: none; z-index: 4;
+  width: 0; height: 0; transform: translate(-50%, -50%);
+  animation: rippleOut 0.6s ease-out forwards;
+}
+@keyframes rippleOut {
+  from { width: 0; height: 0; opacity: 0.7; }
+  to   { width: 90px; height: 90px; opacity: 0; }
+}
+
+/* ── Reset button ───────────────────────────────────── */
+#reset-btn {
+  position: fixed; bottom: 52px; right: 18px; z-index: 5;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 13px;
+  font-family: 'Space Grotesk', sans-serif; font-size: 11px; color: var(--text-muted);
+  cursor: pointer; transition: all 0.2s; display: none;
+}
+#reset-btn.visible { display: block; }
+#reset-btn:hover { background: rgba(255,255,255,0.08); color: var(--text-primary); }
+
+/* ── Legend pulse on active ─────────────────────────── */
+@keyframes legendPulse {
+  0%, 100% { box-shadow: 0 0 6px 0 rgba(255,255,255,0.04); }
+  50%       { box-shadow: 0 0 12px 3px rgba(255,255,255,0.1); }
+}
+.legend-item.active { animation: legendPulse 2s ease-in-out infinite; }
 
 /* ── Export button ──────────────────────────────────── */
 #export-btn {
@@ -250,6 +279,7 @@ h1 em { display: block; font-style: normal; font-size: 11px; font-weight: 400; c
   <div class="t-conns"></div>
 </div>
 
+<button id="reset-btn">↺ visão geral</button>
 <button id="export-btn">↓ exportar PNG</button>
 <div id="hint">scroll · arraste · clique para explorar</div>
 
@@ -458,11 +488,20 @@ function launch(xml) {
         highlightedCluster=null;
         document.querySelectorAll('.legend-item').forEach(el=>{el.classList.remove('active');el.style.opacity='1';});
         showNodeInfo(node);
+        // Ripple at node screen position
+        const pos=renderer.getNodeDisplayData(node);
+        if (pos) {
+          const color=colorMap[String(currentGraph.getNodeAttribute(node,'modClass')||'0')]||'#7b6fff';
+          spawnRipple(pos.x, pos.y, color);
+        }
+        document.getElementById('reset-btn').classList.add('visible');
       });
       renderer.on('clickStage', () => {
         hoveredNode=null; neighborSet=null; highlightedCluster=null;
         renderer.refresh(); resetInfo();
         document.querySelectorAll('.legend-item').forEach(el=>{el.classList.remove('active');el.style.opacity='1';});
+        document.getElementById('reset-btn').classList.remove('visible');
+        updateClusterLabelPositions();
       });
 
       // Camera → update cluster labels + glow
@@ -565,9 +604,11 @@ function updateClusterLabelPositions() {
   document.querySelectorAll('.cl-label').forEach(el=>{
     const c = clusterCentroids[el.dataset.cls]; if (!c) return;
 
-    // Push label outward from global centre by 40% extra
+    // Push label outward — clusters near the global centre get pushed further
     const dx=c.x-gcx, dy=c.y-gcy;
-    const ox = gcx + dx*1.4, oy = gcy + dy*1.4;
+    const dist=Math.sqrt(dx*dx+dy*dy)||1;
+    const push = dist < 15 ? 2.8 : dist < 35 ? 2.0 : 1.65;
+    const ox = gcx + dx*push, oy = gcy + dy*push;
 
     const pos = renderer.graphToViewport({x:ox, y:oy});
     el.style.left = pos.x+'px';
@@ -676,6 +717,7 @@ function highlightCluster(cls) {
     highlightedCluster=null; hoveredNode=null; neighborSet=null;
     renderer.refresh(); resetInfo();
     document.querySelectorAll('.legend-item').forEach(el=>{el.classList.remove('active');el.style.opacity='1';});
+    document.getElementById('reset-btn').classList.remove('visible');
     updateClusterLabelPositions();
     return;
   }
@@ -687,6 +729,7 @@ function highlightCluster(cls) {
   });
   showClusterInfo(cls);
   updateClusterLabelPositions();
+  document.getElementById('reset-btn').classList.add('visible');
   // Animate camera to cluster centroid
   const c=clusterCentroids[String(cls)];
   if (c) {
@@ -731,6 +774,26 @@ function selectNode(node) {
   if (pos) renderer.getCamera().animate({x:pos.x,y:pos.y,ratio:0.18},{duration:600});
   showNodeInfo(node);
 }
+
+// ── Ripple ────────────────────────────────────────────────────────────────────
+function spawnRipple(x, y, color) {
+  const el=document.createElement('div');
+  el.className='ripple';
+  el.style.left=x+'px'; el.style.top=y+'px';
+  el.style.border=`2px solid ${color}`;
+  document.getElementById('sigma-container').appendChild(el);
+  setTimeout(()=>el.remove(), 650);
+}
+
+// ── Reset view button ─────────────────────────────────────────────────────────
+document.getElementById('reset-btn').addEventListener('click', ()=>{
+  hoveredNode=null; neighborSet=null; highlightedCluster=null;
+  renderer && renderer.refresh(); resetInfo();
+  document.querySelectorAll('.legend-item').forEach(el=>{el.classList.remove('active');el.style.opacity='1';});
+  document.getElementById('reset-btn').classList.remove('visible');
+  updateClusterLabelPositions();
+  if (renderer) renderer.getCamera().animate({x:0.5,y:0.5,ratio:1,angle:0},{duration:700,easing:'quadraticInOut'});
+});
 
 // ── Panel toggle ──────────────────────────────────────────────────────────────
 document.getElementById('panel-toggle').addEventListener('click', ()=>{
