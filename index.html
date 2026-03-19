@@ -265,13 +265,33 @@ function launch(xml) {
       currentGraph=graph;
       if(renderer)renderer.kill();
  
+      // Custom label renderer with dark halo for readability
+      function drawLabel(context, data, settings) {
+        if (!data.label) return;
+        const size = settings.labelSize;
+        const font = settings.labelFont;
+        const weight = settings.labelWeight;
+        context.font = `${weight} ${size}px ${font}`;
+        const x = data.x + data.size + 4;
+        const y = data.y + size / 3;
+        // Dark halo
+        context.lineWidth = 3;
+        context.strokeStyle = 'rgba(3,3,10,0.85)';
+        context.lineJoin = 'round';
+        context.strokeText(data.label, x, y);
+        // Label text
+        context.fillStyle = 'rgba(255,255,255,0.9)';
+        context.fillText(data.label, x, y);
+      }
+ 
       renderer=new Sigma(graph,document.getElementById('sigma-container'),{
         renderEdgeLabels:false,
         labelFont:"'Space Grotesk', sans-serif",
         labelSize:12,
         labelWeight:'500',
-        labelColor:{color:'rgba(255,255,255,0.82)'},
+        labelColor:{color:'rgba(255,255,255,0.9)'},
         labelRenderedSizeThreshold:8,
+        labelRenderer: drawLabel,
         minCameraRatio:0.04,
         maxCameraRatio:12,
         defaultEdgeColor:'rgba(255,255,255,0.055)',
@@ -280,11 +300,30 @@ function launch(xml) {
           const r=data._r||128,g=data._g||128,b=data._b||128;
           if(highlightedCluster!==null){
             const a=graph.getNodeAttributes(node);
-            if(String(a.modClass)===String(highlightedCluster)){res.highlighted=true;res.zIndex=1;res.size=data.size*1.3;}
-            else{res.color=`rgba(${r},${g},${b},0.07)`;res.label='';res.size=data.size*0.35;}
+            if(String(a.modClass)===String(highlightedCluster)){
+              res.zIndex=1;
+              res.size=data.size*1.25;
+              // Brighten the node color slightly
+              res.color=`rgb(${Math.min(255,r+40)},${Math.min(255,g+40)},${Math.min(255,b+40)})`;
+            } else {
+              res.color=`rgba(${r},${g},${b},0.07)`;
+              res.label='';
+              res.size=data.size*0.35;
+            }
           } else if(hoveredNode){
-            if(node===hoveredNode||graph.neighbors(hoveredNode).includes(node)){res.highlighted=true;res.zIndex=1;}
-            else{res.color=`rgba(${r},${g},${b},0.09)`;res.label='';res.size=data.size*0.4;}
+            if(node===hoveredNode){
+              res.zIndex=2;
+              res.size=data.size*1.3;
+              res.color=`rgb(${Math.min(255,r+50)},${Math.min(255,g+50)},${Math.min(255,b+50)})`;
+            } else if(graph.neighbors(hoveredNode).includes(node)){
+              res.zIndex=1;
+              res.size=data.size*1.1;
+              res.color=`rgb(${Math.min(255,r+20)},${Math.min(255,g+20)},${Math.min(255,b+20)})`;
+            } else {
+              res.color=`rgba(${r},${g},${b},0.09)`;
+              res.label='';
+              res.size=data.size*0.4;
+            }
           }
           return res;
         },
@@ -293,12 +332,21 @@ function launch(xml) {
           if(highlightedCluster!==null){
             const [s,t]=graph.extremities(edge);
             const sc=String(graph.getNodeAttribute(s,'modClass')),tc=String(graph.getNodeAttribute(t,'modClass'));
-            if(sc===String(highlightedCluster)&&tc===String(highlightedCluster)){res.color='rgba(255,255,255,0.2)';res.size=1.2;}
-            else{res.color='rgba(255,255,255,0.015)';res.size=0.2;}
+            if(sc===String(highlightedCluster)&&tc===String(highlightedCluster)){
+              // Use cluster color for edges
+              const sAttrs=graph.getNodeAttributes(s);
+              const r=sAttrs._r||128,g=sAttrs._g||128,b=sAttrs._b||128;
+              res.color=`rgba(${r},${g},${b},0.35)`;
+              res.size=1.4;
+            } else {res.color='rgba(255,255,255,0.012)';res.size=0.2;}
           } else if(hoveredNode){
             const [s,t]=graph.extremities(edge);
-            if(s===hoveredNode||t===hoveredNode){res.color='rgba(255,255,255,0.28)';res.size=1.5;}
-            else{res.color='rgba(255,255,255,0.015)';res.size=0.2;}
+            if(s===hoveredNode||t===hoveredNode){
+              const hAttrs=graph.getNodeAttributes(hoveredNode);
+              const r=hAttrs._r||128,g=hAttrs._g||128,b=hAttrs._b||128;
+              res.color=`rgba(${r},${g},${b},0.5)`;
+              res.size=1.8;
+            } else {res.color='rgba(255,255,255,0.012)';res.size=0.2;}
           }
           return res;
         }
