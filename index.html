@@ -398,6 +398,7 @@ function launch(xml) {
         minCameraRatio: 0.04,
         maxCameraRatio: 12,
         defaultEdgeColor: '#2c2c44',
+        hoverRenderer: () => {}, // suppress white-box hover label
         nodeReducer(node, data) {
           const res = { ...data };
           // Show label for top 35 always; hide for smaller nodes unless interacting
@@ -451,18 +452,30 @@ function launch(xml) {
         }
       });
 
-      // Hide Sigma's hover canvas (causes white label bar on hover)
-      // Target by class name — works reliably in Sigma 2.x regardless of data-layer attributes
-      const hoverCanvas = document.querySelector('.sigma-hovers canvas') ||
-                          document.querySelector('canvas[class*="hover"]');
-      if (hoverCanvas) hoverCanvas.style.display = 'none';
+      // Suppress Sigma's built-in hover label (white box) using every available method
+      // 1. Direct API — most reliable in Sigma 2.x
+      if (typeof renderer.getCanvases === 'function') {
+        const canvases = renderer.getCanvases();
+        if (canvases && canvases.hovers) {
+          canvases.hovers.style.display = 'none';
+        }
+      }
+      // 2. Fallback: class/attribute scan after a short delay
       setTimeout(() => {
+        // Try direct API again (canvas may not be ready immediately)
+        if (typeof renderer.getCanvases === 'function') {
+          const canvases = renderer.getCanvases();
+          if (canvases && canvases.hovers) canvases.hovers.style.display = 'none';
+        }
+        // Scan all canvases in the container
         document.querySelectorAll('#sigma-container canvas').forEach(c => {
-          if (c.className && c.className.includes && c.className.includes('hover')) {
+          const layer = c.getAttribute('data-layer') || '';
+          const cls = c.className || '';
+          if (layer === 'hovers' || cls.includes('hover')) {
             c.style.display = 'none';
           }
         });
-      }, 300);
+      }, 400);
 
       renderer.on('enterNode', ({ node }) => {
         hoveredNode = node;
