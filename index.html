@@ -99,6 +99,7 @@ h1 em { display: block; font-style: normal; font-size: 11px; font-weight: 400; c
   letter-spacing: 0.06em; z-index: 5; display: none;
 }
 #hint.visible { display: block; }
+.sigma-hovers { display: none !important; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 .fade-in { animation: fadeIn 0.9s ease forwards; }
 </style>
@@ -275,7 +276,6 @@ function launch(xml) {
         labelWeight:'500',
         labelColor:{color:'#ffffff'},
         labelRenderedSizeThreshold:10,
-        hoverRenderer: () => {},
 
         minCameraRatio:0.04,
         maxCameraRatio:12,
@@ -325,6 +325,20 @@ function launch(xml) {
           return res;
         }
       });
+
+      // Hide Sigma's hover canvas — we handle hover via nodeReducer instead
+      const hoverCanvas = document.querySelector('.sigma-hovers canvas') ||
+                          document.querySelector('canvas[class*="hover"]');
+      if (hoverCanvas) hoverCanvas.style.display = 'none';
+      // Also try targeting by querying all sigma canvases
+      setTimeout(() => {
+        const canvases = document.querySelectorAll('#sigma-container canvas');
+        canvases.forEach(c => {
+          if (c.style && (c.getAttribute('data-layer') === 'hovers' || c.className.includes('hover'))) {
+            c.style.display = 'none';
+          }
+        });
+      }, 200);
 
       renderer.on('enterNode',({node})=>{hoveredNode=node;renderer.refresh();document.body.style.cursor='pointer';});
       renderer.on('leaveNode',()=>{hoveredNode=null;renderer.refresh();document.body.style.cursor='crosshair';});
