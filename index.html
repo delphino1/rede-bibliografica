@@ -374,7 +374,7 @@ function launch(xml) {
 
       // Size by degree
       let maxD=1; graph.forEachNode(n=>{const d=graph.degree(n);if(d>maxD)maxD=d;});
-      graph.forEachNode(n=>{const t=graph.degree(n)/maxD; graph.setNodeAttribute(n,'size',4+Math.pow(t,0.55)*26);});
+      graph.forEachNode(n=>{const t=graph.degree(n)/maxD; graph.setNodeAttribute(n,'size',3+Math.pow(t,0.55)*18);});
 
       // Cluster separation
       const cen={},cnt={};
@@ -541,13 +541,25 @@ function createClusterLabels() {
 
 function updateClusterLabelPositions() {
   if (!renderer) return;
-  const ratio=renderer.getCamera().ratio;
+  const ratio = renderer.getCamera().ratio;
+
+  // Global centroid in graph space (computed once per call)
+  let gcx=0, gcy=0, gc=0;
+  Object.values(clusterCentroids).forEach(c=>{ gcx+=c.x; gcy+=c.y; gc++; });
+  if (gc>0) { gcx/=gc; gcy/=gc; }
+
   document.querySelectorAll('.cl-label').forEach(el=>{
-    const c=clusterCentroids[el.dataset.cls]; if(!c) return;
-    const pos=renderer.graphToViewport({x:c.x, y:c.y});
-    el.style.left=pos.x+'px'; el.style.top=pos.y+'px';
-    // Fade when zoomed in close; also hide for active cluster highlight
-    const fade = ratio<0.1 ? 0 : ratio>0.45 ? 0.45 : 0.35;
+    const c = clusterCentroids[el.dataset.cls]; if (!c) return;
+
+    // Push label outward from global centre by 40% extra
+    const dx=c.x-gcx, dy=c.y-gcy;
+    const ox = gcx + dx*1.4, oy = gcy + dy*1.4;
+
+    const pos = renderer.graphToViewport({x:ox, y:oy});
+    el.style.left = pos.x+'px';
+    el.style.top  = pos.y+'px';
+
+    const fade = ratio<0.1 ? 0 : ratio>0.5 ? 0.5 : 0.4;
     el.style.opacity = (highlightedCluster!==null && el.dataset.cls!==String(highlightedCluster)) ? '0' : String(fade);
   });
 }
