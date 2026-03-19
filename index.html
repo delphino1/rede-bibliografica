@@ -2,641 +2,404 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Rede Bibliográfica Interativa</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rede Bibliográfica — Relações Raciais no Brasil</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
+:root {
+  --bg: #03030a;
+  --border: rgba(255,255,255,0.07);
+  --text-primary: rgba(255,255,255,0.92);
+  --text-secondary: rgba(255,255,255,0.45);
+  --text-muted: rgba(255,255,255,0.2);
+  --accent: #7b6fff;
+}
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0f0f1a; color: #ddd; display: flex; height: 100vh; overflow: hidden; }
- 
-#sigma-container { flex: 1; position: relative; background: #0f0f1a; }
- 
+body { font-family: 'Space Grotesk', sans-serif; background: var(--bg); color: var(--text-primary); height: 100vh; overflow: hidden; display: flex; cursor: crosshair; }
+#stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+#sigma-container { flex: 1; position: relative; z-index: 1; }
 #panel {
-  width: 300px;
-  background: #13131f;
-  border-left: 1px solid #2a2a3e;
-  padding: 20px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  overflow-y: auto;
-  flex-shrink: 0;
+  position: fixed; left: 0; top: 0; bottom: 0; width: 272px;
+  background: linear-gradient(180deg, rgba(7,7,18,0.97) 0%, rgba(7,7,18,0.88) 100%);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; z-index: 10;
+  backdrop-filter: blur(20px); padding: 28px 20px 20px; gap: 18px; overflow-y: auto;
 }
- 
-h1 { font-size: 13px; font-weight: 400; color: #666; line-height: 1.5; }
-h1 span { display: block; font-size: 15px; color: #c8cfe8; font-weight: 600; margin-bottom: 2px; }
- 
-#load-area {
-  background: #1c1c2e;
-  border: 1.5px dashed #3a3a5c;
-  border-radius: 10px;
-  padding: 20px 14px;
-  text-align: center;
-  cursor: pointer;
-  transition: border-color 0.2s;
-}
-#load-area:hover { border-color: #6c63ff; }
-#load-area p { font-size: 12px; color: #888; line-height: 1.6; }
-#load-area strong { color: #aaa; font-size: 13px; display: block; margin-bottom: 6px; }
-#file-input { display: none; }
- 
-#load-btn {
-  width: 100%;
-  padding: 9px;
-  background: #6c63ff;
-  border: none;
-  border-radius: 8px;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  margin-top: 10px;
-  transition: background 0.2s;
-}
-#load-btn:hover { background: #5a52d5; }
- 
+.panel-eyebrow { font-size: 9px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.15em; }
+h1 { font-size: 16px; font-weight: 600; color: var(--text-primary); line-height: 1.35; letter-spacing: -0.02em; }
+h1 em { display: block; font-style: normal; font-size: 11px; font-weight: 400; color: var(--text-secondary); margin-top: 3px; letter-spacing: 0; }
+.search-wrap { position: relative; }
+.search-wrap svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); opacity: 0.25; pointer-events: none; }
 #search {
-  width: 100%;
-  padding: 9px 12px;
-  background: #1c1c2e;
-  border: 1px solid #3a3a5c;
-  border-radius: 8px;
-  color: #ddd;
-  font-size: 13px;
-  outline: none;
-  transition: border-color 0.2s;
-  display: none;
+  width: 100%; padding: 9px 12px 9px 34px;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text-primary);
+  font-family: 'Space Grotesk', sans-serif; font-size: 13px; outline: none;
+  transition: border-color 0.2s, background 0.2s;
 }
-#search:focus { border-color: #6c63ff; }
-#search.visible { display: block; }
- 
+#search::placeholder { color: var(--text-muted); }
+#search:focus { border-color: rgba(123,111,255,0.4); background: rgba(123,111,255,0.06); }
 #node-info {
-  background: #1c1c2e;
-  border-radius: 10px;
-  padding: 14px;
-  font-size: 13px;
-  line-height: 1.7;
-  color: #777;
-  display: none;
+  background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+  border-radius: 10px; padding: 13px; font-size: 12px; line-height: 1.7;
+  color: var(--text-secondary); min-height: 76px; transition: all 0.25s;
 }
-#node-info.visible { display: block; }
-#node-info h2 { font-size: 14px; font-weight: 600; color: #c8cfe8; margin-bottom: 6px; line-height: 1.4; }
-#node-info .meta { font-size: 12px; color: #555; margin-top: 8px; }
-#node-info .meta span { color: #888; }
- 
-#legend { display: none; flex-direction: column; gap: 7px; }
-#legend.visible { display: flex; }
-.legend-title { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: 0.08em; }
-.legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #999; cursor: pointer; padding: 3px 0; }
-.legend-item:hover { color: #ddd; }
-.legend-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
- 
-#stats { font-size: 11px; color: #444; display: none; }
-#stats.visible { display: block; }
- 
+#node-info.active { border-color: rgba(123,111,255,0.2); background: rgba(123,111,255,0.04); }
+#node-info h2 { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 7px; font-family: 'Space Mono', monospace; letter-spacing: -0.02em; }
+.node-tag { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; padding: 2px 8px; border-radius: 20px; margin-bottom: 9px; font-weight: 500; letter-spacing: 0.04em; }
+.node-tag::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.node-meta { display: flex; justify-content: space-around; margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--border); }
+.node-meta-item { text-align: center; }
+.node-meta-item .val { font-family: 'Space Mono', monospace; font-size: 17px; color: var(--text-primary); display: block; }
+.node-meta-item .lbl { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.node-neighbors { margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-muted); line-height: 1.9; }
+.divider { height: 1px; background: var(--border); flex-shrink: 0; }
+#legend { display: flex; flex-direction: column; gap: 4px; }
+.legend-header { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 4px; }
+.legend-item {
+  display: flex; align-items: center; gap: 9px; padding: 6px 9px;
+  border-radius: 7px; cursor: pointer; transition: background 0.15s, opacity 0.2s;
+  border: 1px solid transparent; font-size: 12px; color: var(--text-secondary);
+}
+.legend-item:hover { background: rgba(255,255,255,0.04); color: var(--text-primary); }
+.legend-item.active { background: rgba(255,255,255,0.05); border-color: var(--border); color: var(--text-primary); }
+.legend-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+#stats { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-muted); letter-spacing: 0.04em; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border); }
+#load-screen {
+  position: fixed; inset: 0; z-index: 100; display: flex; align-items: center;
+  justify-content: center; background: var(--bg); flex-direction: column; gap: 20px;
+}
+#load-screen.hidden { display: none; }
+.load-eyebrow { font-size: 10px; letter-spacing: 0.18em; color: var(--text-muted); text-transform: uppercase; }
+.load-title { font-size: 26px; font-weight: 600; letter-spacing: -0.04em; text-align: center; }
+.load-box {
+  background: rgba(255,255,255,0.025); border: 1px dashed rgba(255,255,255,0.1);
+  border-radius: 14px; padding: 32px 44px; text-align: center; max-width: 340px;
+  cursor: pointer; transition: border-color 0.2s, background 0.2s;
+}
+.load-box:hover { border-color: rgba(123,111,255,0.4); background: rgba(123,111,255,0.05); }
+.load-box-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+.load-box-sub { font-size: 12px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.6; }
+.load-btn { background: var(--accent); border: none; border-radius: 7px; padding: 9px 22px; color: #fff; font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity 0.2s; }
+.load-btn:hover { opacity: 0.85; }
+#file-input { display: none; }
+#loading-overlay {
+  position: fixed; inset: 0; z-index: 200; display: none; align-items: center;
+  justify-content: center; background: var(--bg); flex-direction: column; gap: 14px;
+}
+#loading-overlay.visible { display: flex; }
+.spinner { width: 28px; height: 28px; border: 2px solid rgba(255,255,255,0.08); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.75s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 12px; color: var(--text-secondary); font-family: 'Space Mono', monospace; letter-spacing: 0.06em; }
 #hint {
-  position: absolute;
-  bottom: 16px;
-  left: 16px;
-  background: rgba(0,0,0,0.55);
-  color: #666;
-  font-size: 11px;
-  padding: 6px 10px;
-  border-radius: 6px;
-  pointer-events: none;
-  display: none;
+  position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  backdrop-filter: blur(12px); color: var(--text-muted); font-size: 10px;
+  padding: 5px 14px; border-radius: 20px; pointer-events: none;
+  letter-spacing: 0.06em; z-index: 5; display: none;
 }
 #hint.visible { display: block; }
- 
-#loading-msg {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: #555;
-  font-size: 13px;
-  display: none;
-}
-#loading-msg.visible { display: block; }
- 
-.tag {
-  display: inline-block;
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 20px;
-  margin-bottom: 8px;
-  font-weight: 500;
-}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.fade-in { animation: fadeIn 0.9s ease forwards; }
 </style>
 </head>
 <body>
+<canvas id="stars"></canvas>
  
-<div id="sigma-container">
-  <div id="loading-msg">Carregando rede...</div>
-  <div id="hint">Scroll para zoom · Arraste para navegar · Clique em um nó</div>
+<div id="load-screen">
+  <div class="load-eyebrow">Visualizador bibliográfico interativo</div>
+  <div class="load-title">Relações Raciais<br>no Brasil</div>
+  <div class="load-box" onclick="document.getElementById('file-input').click()">
+    <div class="load-box-title">Carregar rede</div>
+    <div class="load-box-sub">Selecione o arquivo <code style="background:rgba(255,255,255,0.07);padding:2px 5px;border-radius:4px">rede_raca.gexf</code><br>exportado do Gephi</div>
+    <button class="load-btn" onclick="event.stopPropagation();document.getElementById('file-input').click()">Selecionar arquivo</button>
+    <input type="file" id="file-input" accept=".gexf,.xml">
+  </div>
 </div>
  
-<div id="panel">
-  <h1><span>Rede Bibliográfica</span>Visualizador interativo</h1>
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text">Calculando galáxia...</div>
+</div>
  
-  <div id="load-area" onclick="document.getElementById('file-input').click()">
-    <strong>Carregar arquivo GEXF</strong>
-    <p>Clique aqui ou arraste o arquivo exportado do Gephi</p>
-    <input type="file" id="file-input" accept=".gexf,.xml">
-    <button id="load-btn" onclick="event.stopPropagation(); document.getElementById('file-input').click()">
-      Selecionar arquivo
-    </button>
+<div id="sigma-container"></div>
+ 
+<div id="panel">
+  <div>
+    <div class="panel-eyebrow">Rede de co-citação</div>
+    <h1>Relações Raciais<br>no Brasil
+      <em>SciELO Citation Index · 254 artigos</em>
+    </h1>
   </div>
  
-  <input type="text" id="search" class="" placeholder="🔍  Buscar autor..." />
+  <div class="search-wrap">
+    <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+      <circle cx="6" cy="6" r="4.5" stroke="white" stroke-width="1.2"/>
+      <line x1="9.5" y1="9.5" x2="13" y2="13" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+    </svg>
+    <input type="text" id="search" placeholder="Buscar autor...">
+  </div>
  
-  <div id="node-info"></div>
+  <div id="node-info">
+    <span style="font-size:11px;color:var(--text-muted)">Clique em um nó para explorar.</span>
+  </div>
+ 
+  <div class="divider"></div>
  
   <div id="legend">
-    <p class="legend-title">Clusters (modularidade)</p>
+    <div class="legend-header">Clusters temáticos</div>
     <div id="legend-items"></div>
   </div>
  
   <div id="stats"></div>
 </div>
  
+<div id="hint">scroll · arraste · clique para explorar</div>
+ 
 <script src="https://cdn.jsdelivr.net/npm/graphology@0.25.4/dist/graphology.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sigma@2.4.0/build/sigma.min.js"></script>
 <script>
-// Built-in GEXF parser (no external dependency)
-function parseGEXF(xmlString) {
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(xmlString, 'application/xml');
+// Star field
+(function() {
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  function draw() {
+    canvas.width = innerWidth; canvas.height = innerHeight;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let i = 0; i < 220; i++) {
+      const x = Math.random() * canvas.width, y = Math.random() * canvas.height;
+      const r = Math.random() * 0.75, a = Math.random() * 0.35 + 0.04;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fill();
+    }
+  }
+  draw(); window.addEventListener('resize', draw);
+})();
+ 
+// GEXF parser
+function parseGEXF(xml) {
+  const doc = new DOMParser().parseFromString(xml, 'application/xml');
   const graph = new graphology.Graph({ multi: false });
- 
-  // Parse nodes
-  const nodeElements = doc.querySelectorAll('node');
-  nodeElements.forEach(nodeEl => {
-    const id = nodeEl.getAttribute('id');
-    const label = nodeEl.getAttribute('label') || id;
-    const attrs = { label };
- 
-    // Parse viz attributes (Gephi visual export)
-    const vizColor = nodeEl.querySelector('color');
-    if (vizColor) {
-      const r = vizColor.getAttribute('r') || 128;
-      const g = vizColor.getAttribute('g') || 128;
-      const b = vizColor.getAttribute('b') || 128;
-      attrs.color = `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`;
-    }
-    const vizSize = nodeEl.querySelector('size');
-    if (vizSize) attrs.size = parseFloat(vizSize.getAttribute('value')) || 5;
- 
-    const vizPos = nodeEl.querySelector('position');
-    if (vizPos) {
-      attrs.x = parseFloat(vizPos.getAttribute('x')) || Math.random() * 100;
-      attrs.y = parseFloat(vizPos.getAttribute('y')) || Math.random() * 100;
-    } else {
-      attrs.x = Math.random() * 100;
-      attrs.y = Math.random() * 100;
-    }
- 
-    // Parse data attributes
-    nodeEl.querySelectorAll('attvalue').forEach(av => {
-      const forAttr = av.getAttribute('for') || av.getAttribute('id');
-      const val = av.getAttribute('value');
-      if (forAttr) attrs[forAttr] = val;
-    });
- 
-    try { graph.addNode(id, attrs); } catch(e) {}
-  });
- 
-  // Parse edges
-  const edgeElements = doc.querySelectorAll('edge');
-  edgeElements.forEach(edgeEl => {
-    const id = edgeEl.getAttribute('id');
-    const source = edgeEl.getAttribute('source');
-    const target = edgeEl.getAttribute('target');
-    const weight = parseFloat(edgeEl.getAttribute('weight')) || 1;
-    try {
-      if (graph.hasNode(source) && graph.hasNode(target) && !graph.hasEdge(source, target)) {
-        graph.addEdge(source, target, { weight });
-      }
-    } catch(e) {}
-  });
- 
-  // Parse attribute definitions for modularity
   const attrDefs = {};
-  doc.querySelectorAll('attributes[class="node"] attribute').forEach(attr => {
-    attrDefs[attr.getAttribute('id')] = attr.getAttribute('title');
-  });
+  doc.querySelectorAll('attributes[class="node"] attribute').forEach(a => { attrDefs[a.getAttribute('id')] = a.getAttribute('title'); });
  
-  // Map attribute IDs to names
-  graph.forEachNode((node, attrs) => {
-    Object.entries(attrDefs).forEach(([id, title]) => {
-      if (attrs[id] !== undefined) {
-        graph.setNodeAttribute(node, title, attrs[id]);
-        if (title.toLowerCase().includes('modularity')) {
-          graph.setNodeAttribute(node, 'modClass', attrs[id]);
-        }
-      }
+  doc.querySelectorAll('node').forEach(el => {
+    const id = el.getAttribute('id');
+    const label = el.getAttribute('label') || id;
+    const a = { label };
+    const vc = el.querySelector('color');
+    if (vc) { const r=+vc.getAttribute('r')||128, g=+vc.getAttribute('g')||128, b=+vc.getAttribute('b')||128; a.color=`rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`; a._r=r; a._g=g; a._b=b; }
+    const vs = el.querySelector('size'); if (vs) a._gs = parseFloat(vs.getAttribute('value'))||5;
+    const vp = el.querySelector('position');
+    a.x = vp ? parseFloat(vp.getAttribute('x'))||Math.random()*100 : Math.random()*100;
+    a.y = vp ? parseFloat(vp.getAttribute('y'))||Math.random()*100 : Math.random()*100;
+    el.querySelectorAll('attvalue').forEach(av => {
+      const k = av.getAttribute('for')||av.getAttribute('id'), v = av.getAttribute('value');
+      if (k) { a[k]=v; const t=attrDefs[k]; if(t){a[t]=v; if(t.toLowerCase().includes('modularity')) a.modClass=v;} }
     });
+    try { graph.addNode(id, a); } catch(e) {}
   });
  
+  doc.querySelectorAll('edge').forEach(el => {
+    const s=el.getAttribute('source'), t=el.getAttribute('target'), w=parseFloat(el.getAttribute('weight'))||1;
+    try { if(graph.hasNode(s)&&graph.hasNode(t)&&!graph.hasEdge(s,t)) graph.addEdge(s,t,{weight:w}); } catch(e) {}
+  });
   return graph;
 }
-</script>
-<script>
-let renderer = null;
-let currentGraph = null;
-let hoveredNode = null;
-let highlightedCluster = null;
  
-// Auto-load GEXF from same directory if running on a web server
+let renderer=null, currentGraph=null, hoveredNode=null, highlightedCluster=null;
+ 
+document.getElementById('file-input').addEventListener('change', function() { if(this.files[0]) { const r=new FileReader(); r.onload=e=>launch(e.target.result); r.readAsText(this.files[0]); } });
+document.getElementById('load-screen').addEventListener('dragover', e=>e.preventDefault());
+document.getElementById('load-screen').addEventListener('drop', e=>{ e.preventDefault(); if(e.dataTransfer.files[0]){const r=new FileReader();r.onload=ev=>launch(ev.target.result);r.readAsText(e.dataTransfer.files[0]);} });
+ 
 window.addEventListener('load', () => {
-  const isLocal = location.protocol === 'file:';
-  if (!isLocal) {
-    document.getElementById('loading-msg').textContent = 'Carregando rede...';
-    document.getElementById('loading-msg').classList.add('visible');
-    document.getElementById('load-area').style.display = 'none';
-    fetch('./rede_raca.gexf')
-      .then(r => {
-        if (!r.ok) throw new Error('Arquivo não encontrado: ' + gexfUrl);
-        return r.text();
-      })
-      .then(text => loadGEXF(text))
-      .catch(err => {
-        document.getElementById('loading-msg').classList.remove('visible');
-        document.getElementById('load-area').style.display = 'block';
-        console.warn('Auto-load falhou, use o botão manual:', err.message);
-      });
+  if (location.protocol !== 'file:') {
+    document.getElementById('load-screen').classList.add('hidden');
+    document.getElementById('loading-overlay').classList.add('visible');
+    fetch('./rede_raca.gexf').then(r=>{if(!r.ok)throw new Error();return r.text();}).then(launch).catch(()=>{ document.getElementById('loading-overlay').classList.remove('visible'); document.getElementById('load-screen').classList.remove('hidden'); });
   }
 });
  
-// Drag and drop support
-const container = document.getElementById('sigma-container');
-const loadArea = document.getElementById('load-area');
- 
-loadArea.addEventListener('dragover', e => { e.preventDefault(); loadArea.style.borderColor = '#6c63ff'; });
-loadArea.addEventListener('dragleave', () => { loadArea.style.borderColor = '#3a3a5c'; });
-loadArea.addEventListener('drop', e => {
-  e.preventDefault();
-  loadArea.style.borderColor = '#3a3a5c';
-  const file = e.dataTransfer.files[0];
-  if (file) processFile(file);
-});
- 
-document.getElementById('file-input').addEventListener('change', function() {
-  if (this.files[0]) processFile(this.files[0]);
-});
- 
-function processFile(file) {
-  const reader = new FileReader();
-  document.getElementById('loading-msg').classList.add('visible');
-  reader.onload = function(e) {
+function launch(xml) {
+  document.getElementById('loading-overlay').classList.add('visible');
+  document.getElementById('load-screen').classList.add('hidden');
+  setTimeout(() => {
     try {
-      loadGEXF(e.target.result);
+      const graph = parseGEXF(xml);
+ 
+      // Filter weak edges
+      const we=[]; graph.forEachEdge((e,a)=>{if((a.weight||1)<7)we.push(e);}); we.forEach(e=>graph.dropEdge(e));
+      // Remove isolated
+      const iso=[]; graph.forEachNode(n=>{if(graph.degree(n)===0)iso.push(n);}); iso.forEach(n=>graph.dropNode(n));
+      // Giant component
+      let md=0,sn=null; graph.forEachNode(n=>{const d=graph.degree(n);if(d>md){md=d;sn=n;}});
+      if(sn){const v=new Set(),q=[sn];while(q.length){const n=q.shift();if(v.has(n))continue;v.add(n);graph.neighbors(n).forEach(nb=>{if(!v.has(nb))q.push(nb);});} const out=[];graph.forEachNode(n=>{if(!v.has(n))out.push(n);});out.forEach(n=>graph.dropNode(n));}
+ 
+      // Color map
+      const colorMap={}, rgbMap={};
+      const palette=[{h:'#7b6fff',r:123,g:111,b:255},{h:'#2ec4a7',r:46,g:196,b:167},{h:'#ff7b54',r:255,g:123,b:84},{h:'#e040fb',r:224,g:64,b:251},{h:'#40c4ff',r:64,g:196,b:255},{h:'#ffd740',r:255,g:215,b:64},{h:'#69f0ae',r:105,g:240,b:174},{h:'#ff6d00',r:255,g:109,b:0},{h:'#ff5252',r:255,g:82,b:82},{h:'#b2ff59',r:178,g:255,b:89}];
+      let pi=0;
+      graph.forEachNode((n,a)=>{const cls=a.modClass;if(cls!==undefined&&!colorMap[cls]){const c=a.color;if(c&&!c.includes('128,128,128')&&c!=='#888888'){colorMap[cls]=c;rgbMap[cls]={r:a._r||128,g:a._g||128,b:a._b||128};}else{const p=palette[pi++%palette.length];colorMap[cls]=p.h;rgbMap[cls]={r:p.r,g:p.g,b:p.b};}}});
+ 
+      // Assign colors
+      graph.forEachNode((n,a)=>{
+        const cls=a.modClass;
+        if(!a.color||a.color==='#888888'||a.color.includes('128,128,128')){
+          if(cls!==undefined&&colorMap[cls]){graph.setNodeAttribute(n,'color',colorMap[cls]);const rgb=rgbMap[cls];graph.setNodeAttribute(n,'_r',rgb.r);graph.setNodeAttribute(n,'_g',rgb.g);graph.setNodeAttribute(n,'_b',rgb.b);}
+        }
+        if(!rgbMap[cls]&&a._r===undefined){graph.setNodeAttribute(n,'_r',128);graph.setNodeAttribute(n,'_g',128);graph.setNodeAttribute(n,'_b',128);}
+      });
+ 
+      // Size by degree with power curve
+      let maxD=1; graph.forEachNode(n=>{const d=graph.degree(n);if(d>maxD)maxD=d;});
+      graph.forEachNode(n=>{const t=graph.degree(n)/maxD;graph.setNodeAttribute(n,'size',3+Math.pow(t,0.55)*22);});
+ 
+      // Cluster separation
+      const cen={},cnt={};
+      graph.forEachNode((n,a)=>{const cls=a.modClass||'0';if(!cen[cls]){cen[cls]={x:0,y:0};cnt[cls]=0;}cen[cls].x+=a.x||0;cen[cls].y+=a.y||0;cnt[cls]++;});
+      Object.keys(cen).forEach(cls=>{cen[cls].x/=cnt[cls];cen[cls].y/=cnt[cls];});
+      let gcx=0,gcy=0,gc=0; graph.forEachNode((n,a)=>{gcx+=a.x||0;gcy+=a.y||0;gc++;});gcx/=gc;gcy/=gc;
+      graph.forEachNode((n,a)=>{const cls=a.modClass||'0';const dx=cen[cls].x-gcx,dy=cen[cls].y-gcy;graph.setNodeAttribute(n,'x',(a.x||0)+dx*0.2);graph.setNodeAttribute(n,'y',(a.y||0)+dy*0.2);});
+ 
+      currentGraph=graph;
+      if(renderer)renderer.kill();
+ 
+      renderer=new Sigma(graph,document.getElementById('sigma-container'),{
+        renderEdgeLabels:false,
+        labelFont:"'Space Grotesk', sans-serif",
+        labelSize:12,
+        labelWeight:'500',
+        labelColor:{color:'rgba(255,255,255,0.82)'},
+        labelRenderedSizeThreshold:8,
+        minCameraRatio:0.04,
+        maxCameraRatio:12,
+        defaultEdgeColor:'rgba(255,255,255,0.055)',
+        nodeReducer(node,data){
+          const res={...data};
+          const r=data._r||128,g=data._g||128,b=data._b||128;
+          if(highlightedCluster!==null){
+            const a=graph.getNodeAttributes(node);
+            if(String(a.modClass)===String(highlightedCluster)){res.highlighted=true;res.zIndex=1;res.size=data.size*1.3;}
+            else{res.color=`rgba(${r},${g},${b},0.07)`;res.label='';res.size=data.size*0.35;}
+          } else if(hoveredNode){
+            if(node===hoveredNode||graph.neighbors(hoveredNode).includes(node)){res.highlighted=true;res.zIndex=1;}
+            else{res.color=`rgba(${r},${g},${b},0.09)`;res.label='';res.size=data.size*0.4;}
+          }
+          return res;
+        },
+        edgeReducer(edge,data){
+          const res={...data};
+          if(highlightedCluster!==null){
+            const [s,t]=graph.extremities(edge);
+            const sc=String(graph.getNodeAttribute(s,'modClass')),tc=String(graph.getNodeAttribute(t,'modClass'));
+            if(sc===String(highlightedCluster)&&tc===String(highlightedCluster)){res.color='rgba(255,255,255,0.2)';res.size=1.2;}
+            else{res.color='rgba(255,255,255,0.015)';res.size=0.2;}
+          } else if(hoveredNode){
+            const [s,t]=graph.extremities(edge);
+            if(s===hoveredNode||t===hoveredNode){res.color='rgba(255,255,255,0.28)';res.size=1.5;}
+            else{res.color='rgba(255,255,255,0.015)';res.size=0.2;}
+          }
+          return res;
+        }
+      });
+ 
+      renderer.on('enterNode',({node})=>{hoveredNode=node;renderer.refresh();document.body.style.cursor='pointer';});
+      renderer.on('leaveNode',()=>{hoveredNode=null;renderer.refresh();document.body.style.cursor='crosshair';});
+      renderer.on('clickNode',({node})=>showInfo(node,colorMap,rgbMap));
+      renderer.on('clickStage',()=>{
+        hoveredNode=null;highlightedCluster=null;renderer.refresh();
+        resetInfo();
+        document.querySelectorAll('.legend-item').forEach(el=>{el.classList.remove('active');el.style.opacity='1';});
+      });
+ 
+      document.getElementById('search').addEventListener('input',function(){
+        const q=this.value.toLowerCase().trim();
+        if(!q){hoveredNode=null;renderer.refresh();return;}
+        let found=null;
+        graph.forEachNode((n,a)=>{if((a.label||'').toLowerCase().includes(q))found=n;});
+        if(found){hoveredNode=found;renderer.refresh();const pos=renderer.getNodeDisplayData(found);if(pos)renderer.getCamera().animate({x:pos.x,y:pos.y,ratio:0.22},{duration:500});showInfo(found,colorMap,rgbMap);}
+      });
+ 
+      buildLegend(colorMap);
+      document.getElementById('stats').textContent=`${graph.order} autores · ${graph.size} conexões`;
+      document.getElementById('loading-overlay').classList.remove('visible');
+      document.getElementById('sigma-container').classList.add('fade-in');
+      document.getElementById('hint').classList.add('visible');
+ 
     } catch(err) {
-      document.getElementById('loading-msg').classList.remove('visible');
-      alert('Erro ao carregar o arquivo: ' + err.message + '\n\nVerifique se o arquivo é um GEXF válido exportado do Gephi.');
+      document.getElementById('loading-overlay').classList.remove('visible');
+      document.getElementById('load-screen').classList.remove('hidden');
+      alert('Erro: '+err.message);
     }
-  };
-  reader.readAsText(file);
+  },80);
 }
  
-function loadGEXF(gexfString) {
-  // Destroy previous renderer
-  if (renderer) { renderer.kill(); renderer = null; }
- 
-  // Parse GEXF
-  const graph = parseGEXF(gexfString);
-  currentGraph = graph;
- 
-  // Filter edges by weight (keep only weight >= 7, matching Gephi filter)
-  const weakEdges = [];
-  graph.forEachEdge((edge, attrs) => {
-    if ((attrs.weight || 1) < 7) weakEdges.push(edge);
-  });
-  weakEdges.forEach(e => graph.dropEdge(e));
- 
-  // Remove nodes with no connections after edge filter
-  const toRemove = [];
-  graph.forEachNode((node) => {
-    if (graph.degree(node) === 0) toRemove.push(node);
-  });
-  toRemove.forEach(n => graph.dropNode(n));
- 
-  // Keep only giant component (BFS from highest-degree node)
-  let maxDeg = 0, startNode = null;
-  graph.forEachNode((node) => {
-    const d = graph.degree(node);
-    if (d > maxDeg) { maxDeg = d; startNode = node; }
-  });
-  if (startNode) {
-    const visited = new Set();
-    const queue = [startNode];
-    while (queue.length) {
-      const n = queue.shift();
-      if (visited.has(n)) continue;
-      visited.add(n);
-      graph.neighbors(n).forEach(nb => { if (!visited.has(nb)) queue.push(nb); });
-    }
-    const outsideComponent = [];
-    graph.forEachNode((node) => { if (!visited.has(node)) outsideComponent.push(node); });
-    outsideComponent.forEach(n => graph.dropNode(n));
-  }
- 
-  // Build color map from modularity classes that already have valid colors
-  const classColorMap = {};
-  graph.forEachNode((node, attrs) => {
-    if (attrs.modClass !== undefined && attrs.modClass !== null) {
-      const c = attrs.color;
-      if (c && c !== "#888888" && !c.includes("128,128,128") && !classColorMap[attrs.modClass]) {
-        classColorMap[attrs.modClass] = c;
-      }
-    }
-  });
- 
-  // Assign palette colors to classes that still lack a color
-  const palette2 = ["#6c63ff","#2ec4a7","#e87d3e","#e84393","#5b9cf6","#f0c040","#a0d468","#8067dc","#ff6b6b","#4ecdc4"];
-  let paletteIdx = 0;
-  graph.forEachNode((node, attrs) => {
-    const cls = attrs.modClass;
-    if (!attrs.color || attrs.color === "#888888" || attrs.color.includes("128,128,128")) {
-      if (cls !== undefined && cls !== null) {
-        if (!classColorMap[cls]) {
-          classColorMap[cls] = palette2[paletteIdx++ % palette2.length];
-        }
-        graph.setNodeAttribute(node, "color", classColorMap[cls]);
-      } else {
-        graph.setNodeAttribute(node, "color", "#555566");
-      }
-    }
-  });
- 
-  // Normalize node attributes from Gephi export
-  // Gephi exports r,g,b as separate attributes or as color string
-  const clusterColors = {};
-  let clusterCounter = 0;
-  const palette = [
-    '#6c63ff','#2ec4a7','#e87d3e','#e84393','#5b9cf6',
-    '#f0c040','#a0d468','#8067dc','#ff6b6b','#4ecdc4',
-    '#96c0ce','#ff9f43','#ee5a24','#0652dd','#9980fa'
-  ];
- 
-  graph.forEachNode((node, attrs) => {
-    // Gephi exports node color as r,g,b attributes
-    let color = '#888888';
-    if (attrs.color) {
-      color = attrs.color;
-    } else if (attrs.r !== undefined) {
-      const r = Math.round(attrs.r);
-      const g = Math.round(attrs.g);
-      const b = Math.round(attrs.b);
-      color = `rgb(${r},${g},${b})`;
-    }
- 
-    // Get modularity class
-    const modClass = attrs['modularity_class'] !== undefined
-      ? String(attrs['modularity_class'])
-      : (attrs['Modularity Class'] !== undefined ? String(attrs['Modularity Class']) : null);
- 
-    if (modClass !== null && !clusterColors[modClass]) {
-      clusterColors[modClass] = color;
-    }
- 
-    // Normalize size
-    const size = attrs.size || attrs.Size || 5;
- 
-    graph.setNodeAttribute(node, 'color', color);
-    graph.setNodeAttribute(node, '_gephi_size', parseFloat(size) || 5);
-    graph.setNodeAttribute(node, 'modClass', modClass);
- 
-    // Ensure label
-    if (!attrs.label) {
-      graph.setNodeAttribute(node, 'label', node);
-    }
-  });
- 
-  // Scale node size by degree (applied after all nodes loaded)
-  let maxDegree = 1;
-  graph.forEachNode((node) => {
-    const d = graph.degree(node);
-    if (d > maxDegree) maxDegree = d;
-  });
-  graph.forEachNode((node, attrs) => {
-    const d = graph.degree(node);
-    // Size from 3 (min) to 18 (max), scaled by degree
-    const scaled = 3 + (d / maxDegree) * 15;
-    graph.setNodeAttribute(node, 'size', Math.round(scaled * 10) / 10);
-  });
- 
-  // Nudge nodes slightly toward their cluster centroid for visual separation
-  const centroids = {};
-  const clusterCounts = {};
-  graph.forEachNode((node, attrs) => {
-    const cls = attrs.modClass || '0';
-    if (!centroids[cls]) { centroids[cls] = {x:0, y:0}; clusterCounts[cls] = 0; }
-    centroids[cls].x += attrs.x || 0;
-    centroids[cls].y += attrs.y || 0;
-    clusterCounts[cls]++;
-  });
-  Object.keys(centroids).forEach(cls => {
-    centroids[cls].x /= clusterCounts[cls];
-    centroids[cls].y /= clusterCounts[cls];
-  });
-  // Overall graph centroid
-  let gcx = 0, gcy = 0, gcount = 0;
-  graph.forEachNode((node, attrs) => { gcx += attrs.x||0; gcy += attrs.y||0; gcount++; });
-  gcx /= gcount; gcy /= gcount;
-  // Push cluster centroids away from graph center
-  graph.forEachNode((node, attrs) => {
-    const cls = attrs.modClass || '0';
-    const cx = centroids[cls].x;
-    const cy = centroids[cls].y;
-    const dx = cx - gcx;
-    const dy = cy - gcy;
-    const push = 0.18;
-    graph.setNodeAttribute(node, 'x', (attrs.x||0) + dx * push);
-    graph.setNodeAttribute(node, 'y', (attrs.y||0) + dy * push);
-  });
- 
-  // Normalize edges
-  graph.forEachEdge((edge, attrs) => {
-    graph.setEdgeAttribute(edge, 'color', '#2a2a3e');
-    graph.setEdgeAttribute(edge, 'size', 0.5);
-  });
- 
-  // Setup renderer
-  renderer = new Sigma(graph, document.getElementById('sigma-container'), {
-    renderEdgeLabels: false,
-    labelFont: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-    labelSize: 12,
-    labelWeight: '500',
-    labelColor: { color: '#cccccc' },
-    labelRenderedSizeThreshold: 6,
-    minCameraRatio: 0.05,
-    maxCameraRatio: 10,
-    nodeReducer(node, data) {
-      const res = { ...data };
-      if (highlightedCluster !== null) {
-        const attrs = graph.getNodeAttributes(node);
-        if (String(attrs.modClass) === String(highlightedCluster)) {
-          res.highlighted = true;
-          res.zIndex = 1;
-          res.size = data.size * 1.3;
-        } else {
-          res.color = '#1e1e2e';
-          res.label = '';
-          res.size = data.size * 0.4;
-        }
-      } else if (hoveredNode) {
-        if (node === hoveredNode || graph.neighbors(hoveredNode).includes(node)) {
-          res.highlighted = true;
-          res.zIndex = 1;
-        } else {
-          res.color = '#1e1e2e';
-          res.label = '';
-          res.size = data.size * 0.5;
-        }
-      }
-      return res;
-    },
-    edgeReducer(edge, data) {
-      const res = { ...data };
-      if (highlightedCluster !== null) {
-        const [s, t] = graph.extremities(edge);
-        const sc = String(graph.getNodeAttribute(s, 'modClass'));
-        const tc = String(graph.getNodeAttribute(t, 'modClass'));
-        if (sc === String(highlightedCluster) && tc === String(highlightedCluster)) {
-          res.color = '#6a6a9e';
-          res.size = 1.5;
-        } else {
-          res.color = '#111120';
-          res.size = 0.2;
-        }
-      } else if (hoveredNode) {
-        const [s, t] = graph.extremities(edge);
-        if (s === hoveredNode || t === hoveredNode) {
-          res.color = '#5a5a7e';
-          res.size = 1.5;
-        } else {
-          res.color = '#111120';
-          res.size = 0.2;
-        }
-      }
-      return res;
-    }
-  });
- 
-  renderer.on('enterNode', ({ node }) => {
-    hoveredNode = node;
-    renderer.refresh();
-  });
-  renderer.on('leaveNode', () => {
-    hoveredNode = null;
-    renderer.refresh();
-  });
-  renderer.on('clickNode', ({ node }) => showNodeInfo(node));
-  renderer.on('clickStage', () => {
-    hoveredNode = null;
-    highlightedCluster = null;
-    renderer.refresh();
-    document.getElementById('node-info').classList.remove('visible');
-    document.getElementById('node-info').innerHTML = '';
-    // Reset legend item styles
-    document.querySelectorAll('.legend-item').forEach(el => el.style.opacity = '1');
-  });
- 
-  // Update UI
-  document.getElementById('loading-msg').classList.remove('visible');
-  document.getElementById('load-area').style.display = 'none';
-  document.getElementById('search').classList.add('visible');
-  document.getElementById('node-info').classList.add('visible');
-  document.getElementById('node-info').innerHTML = '<p style="color:#555">Clique em um nó para ver detalhes.</p>';
-  document.getElementById('hint').classList.add('visible');
-  document.getElementById('stats').classList.add('visible');
-  document.getElementById('stats').textContent = `${graph.order} autores · ${graph.size} conexões`;
- 
-  // Build legend
-  buildLegend(clusterColors);
- 
-  // Search
-  document.getElementById('search').addEventListener('input', function() {
-    const q = this.value.toLowerCase().trim();
-    if (!q) { hoveredNode = null; renderer.refresh(); return; }
-    let found = null;
-    graph.forEachNode((node, attrs) => {
-      if ((attrs.label || '').toLowerCase().includes(q)) found = node;
-    });
-    if (found) {
-      hoveredNode = found;
-      renderer.refresh();
-      const pos = renderer.getNodeDisplayData(found);
-      if (pos) renderer.getCamera().animate({ x: pos.x, y: pos.y, ratio: 0.3 }, { duration: 400 });
-      showNodeInfo(found);
-    }
-  });
-}
- 
-function showNodeInfo(node) {
-  const a = currentGraph.getNodeAttributes(node);
-  const info = document.getElementById('node-info');
-  info.classList.add('visible');
- 
-  const degree = currentGraph.degree(node);
-  const color = a.color || '#888';
- 
-  info.innerHTML = `
-    <h2>${a.label || node}</h2>
-    <span class="tag" style="background:${color}22;color:${color};border:1px solid ${color}44">
-      Cluster ${a.modClass !== null ? a.modClass : '—'}
-    </span>
-    <div class="meta">
-      <span>Conexões:</span> ${degree} autores co-citados<br>
+function showInfo(node, colorMap, rgbMap) {
+  const a=currentGraph.getNodeAttributes(node);
+  const deg=currentGraph.degree(node);
+  const cls=a.modClass;
+  const color=colorMap[cls]||a.color||'#888';
+  const rgb=rgbMap[cls]||{r:128,g:128,b:128};
+  const neighbors=currentGraph.neighbors(node).map(n=>currentGraph.getNodeAttribute(n,'label')).sort().slice(0,6);
+  const info=document.getElementById('node-info');
+  info.classList.add('active');
+  info.innerHTML=`
+    <h2>${a.label||node}</h2>
+    <span class="node-tag" style="background:rgba(${rgb.r},${rgb.g},${rgb.b},0.14);color:${color}">Cluster ${cls!==undefined?cls:'—'}</span>
+    <div class="node-meta">
+      <div class="node-meta-item"><span class="val">${deg}</span><span class="lbl">conexões</span></div>
+      <div class="node-meta-item"><span class="val">${Math.round(deg/currentGraph.order*100)}%</span><span class="lbl">da rede</span></div>
     </div>
+    ${neighbors.length?`<div class="node-neighbors">${neighbors.map(n=>`<span style="color:var(--text-secondary)">${n}</span>`).join(' · ')}${deg>6?` <span style="opacity:0.4">+${deg-6}</span>`:''}</div>`:''}
   `;
 }
  
-function buildLegend(clusterColors) {
-  const legendItems = document.getElementById('legend-items');
-  legendItems.innerHTML = '';
-  const sorted = Object.entries(clusterColors).sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
-  sorted.forEach(([cls, color]) => {
-    const div = document.createElement('div');
-    div.className = 'legend-item';
-    div.innerHTML = `<div class="legend-dot" style="background:${color}"></div> Cluster ${cls}`;
-    div.dataset.cls = String(cls);
-    div.onclick = () => highlightCluster(cls);
-    legendItems.appendChild(div);
+function resetInfo() {
+  const info=document.getElementById('node-info');
+  info.classList.remove('active');
+  info.innerHTML='<span style="font-size:11px;color:var(--text-muted)">Clique em um nó para explorar.</span>';
+}
+ 
+function buildLegend(colorMap) {
+  // ── Nomeie os clusters aqui ──────────────────────────
+  const clusterNames = {
+    '0': 'Cluster 0',
+    '1': 'Cluster 1',
+    '2': 'Cluster 2',
+    '3': 'Cluster 3',
+    '4': 'Cluster 4',
+    '5': 'Cluster 5',
+    '6': 'Cluster 6',
+  };
+  // ─────────────────────────────────────────────────────
+  const container=document.getElementById('legend-items');
+  container.innerHTML='';
+  Object.entries(colorMap).sort((a,b)=>+a[0]-+b[0]).forEach(([cls,color])=>{
+    const div=document.createElement('div');
+    div.className='legend-item';
+    div.dataset.cls=String(cls);
+    div.innerHTML=`<div class="legend-dot" style="background:${color};box-shadow:0 0 5px ${color}"></div>${clusterNames[cls]||'Cluster '+cls}`;
+    div.onclick=()=>highlightCluster(cls);
+    container.appendChild(div);
   });
-  document.getElementById('legend').classList.add('visible');
 }
  
 function highlightCluster(cls) {
-  if (!currentGraph || !renderer) return;
- 
-  // Toggle off if clicking same cluster
-  if (String(highlightedCluster) === String(cls)) {
-    highlightedCluster = null;
-    renderer.refresh();
-    document.querySelectorAll('.legend-item').forEach(el => el.style.opacity = '1');
+  if(!currentGraph||!renderer)return;
+  if(String(highlightedCluster)===String(cls)){
+    highlightedCluster=null;renderer.refresh();
+    document.querySelectorAll('.legend-item').forEach(el=>{el.classList.remove('active');el.style.opacity='1';});
     return;
   }
- 
-  highlightedCluster = cls;
-  hoveredNode = null;
-  renderer.refresh();
- 
-  // Dim non-selected legend items
-  document.querySelectorAll('.legend-item').forEach(el => {
-    el.style.opacity = el.dataset.cls === String(cls) ? '1' : '0.3';
+  highlightedCluster=cls;hoveredNode=null;renderer.refresh();
+  document.querySelectorAll('.legend-item').forEach(el=>{
+    if(el.dataset.cls===String(cls)){el.classList.add('active');el.style.opacity='1';}
+    else{el.classList.remove('active');el.style.opacity='0.28';}
   });
- 
-  // Zoom to cluster centroid
-  let cx = 0, cy = 0, count = 0;
-  currentGraph.forEachNode((node, attrs) => {
-    if (String(attrs.modClass) === String(cls)) {
-      const pos = renderer.getNodeDisplayData(node);
-      if (pos) { cx += pos.x; cy += pos.y; count++; }
-    }
-  });
-  if (count > 0) {
-    renderer.getCamera().animate({ x: cx / count, y: cy / count, ratio: 0.4 }, { duration: 500 });
-  }
+  let cx=0,cy=0,count=0;
+  currentGraph.forEachNode((n,a)=>{if(String(a.modClass)===String(cls)){const p=renderer.getNodeDisplayData(n);if(p){cx+=p.x;cy+=p.y;count++;}}});
+  if(count>0)renderer.getCamera().animate({x:cx/count,y:cy/count,ratio:0.32},{duration:600});
 }
 </script>
 </body>
