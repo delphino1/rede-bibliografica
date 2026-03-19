@@ -113,7 +113,8 @@ h1 em { display: block; font-style: normal; font-size: 11px; font-weight: 400; c
 }
 #reset-btn:hover { background: rgba(255,255,255,0.08); color: var(--text-secondary); }
 #reset-btn.visible { display: block; }
-.sigma-hovers { display: none !important; }
+/* Hide hover rendering layer but NOT the mouse event layer */
+#sigma-container canvas[data-layer="hovers"] { visibility: hidden !important; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 .fade-in { animation: fadeIn 0.9s ease forwards; }
 </style>
@@ -450,16 +451,15 @@ function launch(xml) {
         }
       });
 
-      // Hide Sigma's hover canvas (causes white label bar)
+      // Hide ONLY the hover rendering canvas — never the mouse event canvas
+      // The mouse event canvas must remain visible for interactions to work
       setTimeout(() => {
         document.querySelectorAll('#sigma-container canvas').forEach(c => {
-          if (c.getAttribute('data-layer') === 'hovers' || (c.className || '').includes('hover')) {
-            c.style.display = 'none';
+          if (c.getAttribute('data-layer') === 'hovers') {
+            c.style.visibility = 'hidden'; // visibility:hidden keeps layout + doesn't block events
           }
         });
-        const allCanvases = document.querySelectorAll('#sigma-container canvas');
-        if (allCanvases.length >= 3) allCanvases[allCanvases.length - 1].style.display = 'none';
-      }, 200);
+      }, 300);
 
       renderer.on('enterNode', ({ node }) => {
         hoveredNode = node;
